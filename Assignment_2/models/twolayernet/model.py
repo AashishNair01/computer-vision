@@ -71,6 +71,43 @@ class TwoLayerNetv1(object):
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
+        z2 = X@W1
+        z2 += b1
+        a2 = []
+
+        for each_row in z2:
+            arr = []
+            for each_column in each_row:
+                if each_column < 0:
+                    arr.append(0)
+                else:
+                    arr.append(each_column)
+            a2.append(arr)
+        a2 = np.array(a2)
+
+        z3 = a2@W2
+        z3 = z3 + b2
+        self.z3 = z3
+        summation = 0
+
+        softmax_scores = []
+        for each in z3:
+            arr = []
+            summation = 0
+            for every in each:
+                summation += np.exp(every)
+            for every in each:
+                arr.append(np.exp(every)/summation)
+            softmax_scores.append(arr)
+            
+        softmax_scores = np.array(softmax_scores)
+          
+        
+        
+            
+                
+
+
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
         # If the targets are not given then jump out, we're done
@@ -116,7 +153,7 @@ class TwoLayerNetv2(TwoLayerNetv1):
         # from the parent (i.e v1) class.                                             #
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
+        softmax_scores = self.forward(X)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -133,7 +170,27 @@ class TwoLayerNetv2(TwoLayerNetv1):
         # classifier loss.                                                          #
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+        for sample_numb in range(len(self.z3)):
+            summation = 0
+            for j in range(len(self.z3[sample_numb])):
+                summation += np.exp(self.z3[sample_numb][j])
+            this_loss = np.exp(self.z3[sample_numb][y[sample_numb]])/summation
+            loss += -np.log(this_loss)
+        
+        loss = loss/len(softmax_scores)
 
+        norm_W1,norm_W2 = 0,0
+
+        for row in range(len(W1)):
+            for column in range(len(W1[row])):
+                norm_W1 += np.square(W1[row][column])
+
+        for row in range(len(W2)):
+            for column in range(len(W2[row])):
+                norm_W2 += np.square(W2[row][column])
+        
+        loss = loss + reg*(norm_W1 + norm_W2)
+            
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
