@@ -35,11 +35,11 @@ class TwoLayerNetv1(object):
         """
         np.random.seed(0)
         self.params = {}
-        self.params['W1'] = std * np.random.randn(input_size, hidden_size)
-        self.params['b1'] = np.zeros(hidden_size)
-        self.params['W2'] = std * np.random.randn(hidden_size, output_size)
-        self.params['b2'] = np.zeros(output_size)
-        
+        self.params["W1"] = std * np.random.randn(input_size, hidden_size)
+        self.params["b1"] = np.zeros(hidden_size)
+        self.params["W2"] = std * np.random.randn(hidden_size, output_size)
+        self.params["b2"] = np.zeros(output_size)
+
     def forward(self, X):
         """
         Compute the final outputs for a two layer fully connected neural
@@ -58,8 +58,8 @@ class TwoLayerNetv1(object):
         the score for class c on input X[i].
         """
         # Unpack variables from the params dictionary
-        W1, b1 = self.params['W1'], self.params['b1']
-        W2, b2 = self.params['W2'], self.params['b2']
+        W1, b1 = self.params["W1"], self.params["b1"]
+        W2, b2 = self.params["W2"], self.params["b2"]
         N, D = X.shape
 
         # Compute the forward pass
@@ -71,55 +71,27 @@ class TwoLayerNetv1(object):
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        z2 = X@W1
-        z2 += b1
-        a2 = []
-
-        for each_row in z2:
-            arr = []
-            for each_column in each_row:
-                if each_column < 0:
-                    arr.append(0)
-                else:
-                    arr.append(each_column)
-            a2.append(arr)
-        a2 = np.array(a2)
-
-        z3 = a2@W2
-        z3 = z3 + b2
+        z2 = X @ W1 + b1
+        # ReLU activation
+        a2 = np.maximum(0, z2)
+        self.a2 = a2
+        z3 = a2 @ W2 + b2
         self.z3 = z3
-        summation = 0
-
-        softmax_scores = []
-        for each in z3:
-            arr = []
-            summation = 0
-            for every in each:
-                summation += np.exp(every)
-            for every in each:
-                arr.append(np.exp(every)/summation)
-            softmax_scores.append(arr)
-            
-        softmax_scores = np.array(softmax_scores)
-          
-        
-        
-            
-                
-
+        # Softmax activation
+        exp_scores = np.exp(z3)
+        softmax_scores = exp_scores / np.sum(exp_scores, axis=1, keepdims=True)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
         # If the targets are not given then jump out, we're done
         return softmax_scores
-    
+
     @abstractmethod
     def compute_loss(self, **kwargs):
         raise NotImplementedError
 
 
 class TwoLayerNetv2(TwoLayerNetv1):
-    
     def compute_loss(self, X, y=None, reg=0.0):
         """
         Compute the loss and gradients for a two layer fully connected neural
@@ -138,8 +110,8 @@ class TwoLayerNetv2(TwoLayerNetv1):
           samples.
         """
         # Unpack variables from the params dictionary
-        W1, b1 = self.params['W1'], self.params['b1']
-        W2, b2 = self.params['W2'], self.params['b2']
+        W1, b1 = self.params["W1"], self.params["b1"]
+        W2, b2 = self.params["W2"], self.params["b2"]
         N, D = X.shape
 
         # Compute the forward pass
@@ -162,7 +134,7 @@ class TwoLayerNetv2(TwoLayerNetv1):
             return softmax_scores
 
         # Compute the loss
-        loss = 0.
+        loss = 0.0
         #############################################################################
         # TODO: Finish the forward pass, and compute the loss. This should include  #
         # both the data loss and L2 regularization for W1 and W2. Store the result  #
@@ -170,39 +142,30 @@ class TwoLayerNetv2(TwoLayerNetv1):
         # classifier loss.                                                          #
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-        for sample_numb in range(len(self.z3)):
-            summation = 0
-            for j in range(len(self.z3[sample_numb])):
-                summation += np.exp(self.z3[sample_numb][j])
-            this_loss = np.exp(self.z3[sample_numb][y[sample_numb]])/summation
-            loss += -np.log(this_loss)
-        
-        loss = loss/len(softmax_scores)
-
-        norm_W1,norm_W2 = 0,0
-
-        for row in range(len(W1)):
-            for column in range(len(W1[row])):
-                norm_W1 += np.square(W1[row][column])
-
-        for row in range(len(W2)):
-            for column in range(len(W2[row])):
-                norm_W2 += np.square(W2[row][column])
-        
-        loss = loss + reg*(norm_W1 + norm_W2)
-            
+        num_samples = softmax_scores.shape[0]
+        # Confidence of correct class for each sample
+        row_numbers = np.arange(num_samples)
+        correct_answers_probs = softmax_scores[row_numbers, y]
+        # Log loss
+        individual_penalties = -np.log(correct_answers_probs)
+        data_loss = np.sum(individual_penalties) / num_samples
+        # For L2 regularization
+        w1_complexity = np.sum(W1**2)
+        w2_complexity = np.sum(W2**2)
+        total_complexity = w1_complexity + w2_complexity
+        # Final loss
+        loss = data_loss + (reg * total_complexity)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
         return loss
-    
+
     @abstractmethod
     def back_propagation(self, **kwargs):
-        raise NotImplementedError # No need to implement here!
-    
+        raise NotImplementedError  # No need to implement here!
+
 
 class TwoLayerNetv3(TwoLayerNetv2):
-    
     def back_propagation(self, X, y=None, reg=0.0):
         """
         Compute the loss and gradients for a two layer fully connected neural
@@ -223,13 +186,12 @@ class TwoLayerNetv3(TwoLayerNetv2):
           with respect to the loss function; has the same keys as self.params.
         """
         # Unpack variables from the params dictionary
-        W1, b1 = self.params['W1'], self.params['b1']
-        W2, b2 = self.params['W2'], self.params['b2']
+        W1, b1 = self.params["W1"], self.params["b1"]
+        W2, b2 = self.params["W2"], self.params["b2"]
         N, D = X.shape
 
-
         # Compute the forward pass
-        scores = 0.
+        scores = 0.0
         #############################################################################
         # TODO: Perform the forward pass, computing the class probabilities for the   #
         # input. Store the result in the scores variable, which should be an array    #
@@ -240,7 +202,7 @@ class TwoLayerNetv3(TwoLayerNetv2):
         # Thus you can simply use the method from the parent class.                   #
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)****
-
+        scores = self.forward(X)
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
         # If the targets are not given then jump out, we're done
@@ -248,7 +210,7 @@ class TwoLayerNetv3(TwoLayerNetv2):
             return scores
 
         # Compute the loss
-        loss = 0.
+        loss = 0.0
         #############################################################################
         # TODO: Finish the forward pass, and compute the loss. This should include    #
         # both the data loss and L2 regularization for W1 and W2. Store the result    #
@@ -259,7 +221,7 @@ class TwoLayerNetv3(TwoLayerNetv2):
         # from the parent (i.e v2) class.                                             #
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
+        loss = self.compute_loss(X, y, reg)
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
         # Backward pass: compute gradients
@@ -270,12 +232,28 @@ class TwoLayerNetv3(TwoLayerNetv2):
         # grads['W1'] should store the gradient on W1, and be a matrix of same size #
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+        # Gradient of output layer (predicted - true)
+        d_out = scores.copy()
+        for i in range(N):
+            correct_class = y[i]
+            d_out[i, correct_class] -= 1
+        # Average over number of samples
+        d_out /= N
+        # Gradient of W2 and b2
+        grads["W2"] = self.a2.T @ d_out + (2 * reg * W2)
+        grads["b2"] = np.sum(d_out, axis=0)
+        # Hidden layer backprop
+        d_hidden = d_out @ W2.T
+        # Backprop through ReLU
+        d_hidden[self.a2 <= 0] = 0
+        # Gradient of W1 and b1
+        grads["W1"] = X.T @ d_hidden + (2 * reg * W1)
+        grads["b1"] = np.sum(d_hidden, axis=0)
 
-        
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
         return loss, grads
-    
+
     @abstractmethod
     def train(self, **kwargs):
         raise NotImplementedError
@@ -283,14 +261,22 @@ class TwoLayerNetv3(TwoLayerNetv2):
     @abstractmethod
     def predict(self, **kwargs):
         raise NotImplementedError
-    
+
 
 class TwoLayerNetv4(TwoLayerNetv3):
-    
-    def train(self, X, y, X_val, y_val,
-              learning_rate=1e-3, learning_rate_decay=0.95,
-              reg=5e-6, num_iters=100,
-              batch_size=200, verbose=False):
+    def train(
+        self,
+        X,
+        y,
+        X_val,
+        y_val,
+        learning_rate=1e-3,
+        learning_rate_decay=0.95,
+        reg=5e-6,
+        num_iters=100,
+        batch_size=200,
+        verbose=False,
+    ):
         """
         Train this neural network using stochastic gradient descent.
 
@@ -331,7 +317,6 @@ class TwoLayerNetv4(TwoLayerNetv3):
             X_batch = X[rand_ind]
             y_batch = y[rand_ind]
             #########################################################################
-            
 
             # Compute loss and gradients using the current minibatch
             loss, grads = self.back_propagation(X_batch, y=y_batch, reg=reg)
@@ -345,13 +330,14 @@ class TwoLayerNetv4(TwoLayerNetv3):
             # Do not forget to apply the learning_rate                              #
             #########################################################################
             # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-
-
+            self.params["W1"] -= learning_rate * grads["W1"]
+            self.params["b1"] -= learning_rate * grads["b1"]
+            self.params["W2"] -= learning_rate * grads["W2"]
+            self.params["b2"] -= learning_rate * grads["b2"]
             # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
             if verbose and it % 100 == 0:
-                print(f'iteration {it} / {num_iters}: loss {loss}', end='\r')
+                print(f"iteration {it} / {num_iters}: loss {loss}", end="\r")
 
             # Every epoch, check train and val accuracy and decay learning rate.
             if it % iterations_per_epoch == 0:
@@ -365,11 +351,11 @@ class TwoLayerNetv4(TwoLayerNetv3):
                 learning_rate *= learning_rate_decay
 
         return {
-          'loss_history': loss_history,
-          'train_acc_history': train_acc_history,
-          'val_acc_history': val_acc_history,
+            "loss_history": loss_history,
+            "train_acc_history": train_acc_history,
+            "val_acc_history": val_acc_history,
         }
-    
+
     def predict(self, X):
         """
         Use the trained weights of this two-layer network to predict labels for
@@ -391,8 +377,8 @@ class TwoLayerNetv4(TwoLayerNetv3):
         # TODO: Implement this function; it should be VERY simple!                #
         ###########################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-
+        scores = self.forward(X)
+        y_pred = np.argmax(scores, axis=1)
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
         return y_pred
