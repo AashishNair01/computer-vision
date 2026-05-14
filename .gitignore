@@ -1,3 +1,11 @@
 cifar-10-batches-py/
 *.ckpt
-.gitignore
+# Ignore all __pycache__ folders recursively
+**/__pycache__/
+
+# Environments and IDE settings
+venv/
+.env
+.vscode/
+.idea/
+.DS_Store
