@@ -1,7 +1,6 @@
 cifar-10-batches-py/
 *.ckpt
-# Ignore all __pycache__ folders recursively
-**/__pycache__/
+__pycache__/
 
 # Environments and IDE settings
 venv/
