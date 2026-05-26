@@ -1,4 +1,6 @@
 cifar-10-batches-py/
+*.tar.gz
+Assignment_3/Logs/
 *.ckpt
 __pycache__/
 
