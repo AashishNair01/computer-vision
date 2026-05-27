@@ -20,6 +20,20 @@ presets = dict(
     # E.g. CIFAR10_WithFlip=dict()
     ##############
     CIFAR10_WithFlip=dict(
+        train=transforms.Compose([
+            # Geometric Augmentations
+            transforms.RandomHorizontalFlip(p=0.5),
+            transforms.RandomCrop(32, padding=4, padding_mode='reflect'),
+            transforms.RandomRotation(degrees=15),
+            # Color Space Augmentations
+            transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),          
+            transforms.ToTensor(),
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+        ]),
+        eval=transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        ])
     ),
 
     #  This one is for Question 4.
