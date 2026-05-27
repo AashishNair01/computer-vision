@@ -59,10 +59,11 @@ setuptools==80.7.1
 six==1.17.0
 smmap==5.0.2
 stack-data==0.6.3
-sympy==1.14.0
+sympy==1.13.1
 threadpoolctl==3.6.0
-torch==2.7.0
-torchvision==0.22.0
+torch==2.6.0+cu124 --index-url https://download.pytorch.org/whl/cu124
+torchvision==0.21.0+cu124 --index-url https://download.pytorch.org/whl/cu124
+torchaudio==2.6.0+cu124 --index-url https://download.pytorch.org/whl/cu124
 tornado==6.4.2
 tqdm==4.67.1
 traitlets==5.14.3
