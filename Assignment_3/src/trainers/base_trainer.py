@@ -20,6 +20,7 @@ class BaseTrainer:
 
         self.config = config # General config (model arch, optimizer, lr_scheduler, etc.)
         self.trainer_config = self.config['trainer_config'] # Training details such as num_epochs etc.
+        
 
         # Setup a logger (just for cleaner log files)
         self._configure_logging(log_dir)
@@ -56,6 +57,12 @@ class BaseTrainer:
         self.start_epoch = 1
         self.best_epoch = 1
         self.current_epoch = 1
+        self.history = {
+            'train_loss': [],
+            'eval_loss': [],
+            'train_top1': [],
+            'eval_top1': []
+        }
 
     def _configure_logging(self, log_dir):
         self.logger = logging.getLogger()
@@ -131,7 +138,27 @@ class BaseTrainer:
                     # (e.g for loss values we would want min, but for accuracy we want max.)                        #
                     #################################################################################################   
                     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-                    pass
+                    current_value = log[self.monitor_metric]
+                    is_best = False
+
+                    # Check for improvements based on monitoring mode
+                    if self.monitor_mode == 'min':
+                        if current_value < self.monitor_best:
+                            self.monitor_best = current_value
+                            is_best = True
+                    elif self.monitor_mode == 'max':
+                        if current_value > self.monitor_best:
+                            self.monitor_best = current_value
+                            is_best = True
+
+                    if is_best:
+                        self.best_epoch = self.current_epoch
+                        self.not_improved_count = 0
+                        best_path = os.path.join(self.checkpoint_dir, 'best_val_model.pth')
+                        self.logger.info(f"New validation performance peak hit at epoch {self.current_epoch}! Updated Best: {current_value:0.5f}")
+                        self.save_model(path=best_path)
+                    else:
+                        self.not_improved_count += 1
                     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
                     ############################################################################################
@@ -139,13 +166,20 @@ class BaseTrainer:
                     # the last self.early_stop steps, see if you should break the training loop.               #
                     ############################################################################################
                     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-
+                    if self.not_improved_count >= self.early_stop:
+                        self.logger.info(f"Early Stopping flag triggered! Terminating tracking window at epoch {self.current_epoch}.")
+                        break
                     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
                 else:
                     ## The metric wasn't measured in this epoch. Don't change not_impoved_count or similar things here!!!
                     self.logger.warning(f"Warning: At epoch {self.current_epoch} Metric '{self.monitor_metric}'"+\
                                 " wasn't measured. Not monitoring it for this epoch.")
+                    
+            # --- Extract and append metric records ---
+            if 'loss' in log: self.history['train_loss'].append(log['loss'])
+            if 'eval_loss' in log: self.history['eval_loss'].append(log['eval_loss'])
+            if 'top1' in log: self.history['train_top1'].append(log['top1'])
+            if 'eval_top1' in log: self.history['eval_top1'].append(log['eval_top1'])
             
             # print logged information to the screen
             for key, value in log.items():
@@ -161,6 +195,8 @@ class BaseTrainer:
         # Always save the last model
         path = os.path.join(self.checkpoint_dir, f'last_model.pth')
         self.save_model(path=path)
+        
+        return self.history
 
     def should_evaluate(self):
         """
@@ -172,7 +208,7 @@ class BaseTrainer:
         ###  TODO  ################################################
         # Based on the self.current_epoch and self.eval_interval, determine if we should evaluate.
         # You can take hint from saving logic implemented in BaseTrainer.train() method
-        return True
+        return self.current_epoch % self.eval_period == 0
         #########################################################
     
     @abstractmethod # To be implemented by the child classes!
