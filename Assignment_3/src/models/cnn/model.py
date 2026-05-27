@@ -42,7 +42,7 @@ class ConvNet(BaseModel):
             input_size = each
             layers.append(layer)
             layers.append(self.activation())
-            layer = nn.MaxPool2d(kernel_size=2)
+            layer = nn.MaxPool2d(kernel_size=2,stride=2)
             layers.append(layer)
         self.network = nn.Sequential(*layers)
         self.output_layer = nn.Linear(self.hidden_layers[-1],self.num_classes)
