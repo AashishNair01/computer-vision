@@ -19,7 +19,7 @@ q1_experiment = dict(
         hidden_layers=[128, 512, 512, 512, 512],
         activation=nn.ReLU,
         norm_layer=nn.Identity,
-        drop_prob=0.4,
+        drop_prob=0.0,
     ),
 
     datamodule=CIFAR10DataModule,
