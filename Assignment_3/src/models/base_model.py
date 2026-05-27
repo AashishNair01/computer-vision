@@ -34,6 +34,5 @@ class BaseModel(nn.Module):
                 num_of_params += num_of_params_in_layer
                 ret_str += f"Layer name: {layer_name} has {num_of_params_in_layer} number of learnable parameters.\n"
         ret_str += f"Total number of trainable parameters in the network is {num_of_params}"
-                
         
         return ret_str
