@@ -70,12 +70,11 @@ class ConvNet(BaseModel):
         total = weights.shape[0]
         fig, axs = plt.subplots(8,16)
         for cur,axes in enumerate(axs.flat):
-            a = weights[cur].permute(1, 2, 0).detach().numpy()
+            a = weights[cur].permute(1, 2, 0).detach().cpu().numpy()
             a =self._normalize(a)
             axes.imshow(a)
             axes.axis('off')
         plt.show()
-
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
