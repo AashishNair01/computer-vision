@@ -36,17 +36,21 @@ class ConvNet(BaseModel):
         #################################################################################
         layers = []
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-        input_size = self.input_size
-        for each in self.hidden_layers:
-            layer = nn.Conv2d(input_size, each, kernel_size=3, stride=1,padding=1)
-            input_size = each
-            layers.append(layer)
+        input_channels = self.input_size
+        for out_channels in self.hidden_layers:
+            layers.append(nn.Conv2d(input_channels, out_channels, kernel_size=3, stride=1, padding=1))
+            # For Batch Normalization 
+            if self.norm_layer != nn.Identity:
+                layers.append(self.norm_layer(out_channels))
+            layers.append(nn.MaxPool2d(kernel_size=2, stride=2))
+            # Dropout layer
+            if self.drop_prob > 0.0:
+                layers.append(nn.Dropout(p=self.drop_prob))
             layers.append(self.activation())
-            layer = nn.MaxPool2d(kernel_size=2,stride=2)
-            layers.append(layer)
+            input_channels = out_channels
         self.network = nn.Sequential(*layers)
-        self.output_layer = nn.Linear(self.hidden_layers[-1],self.num_classes)
-
+        # Final Classification Head
+        self.output_layer = nn.Linear(self.hidden_layers[-1], self.num_classes)
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
     def _normalize(self, img):
