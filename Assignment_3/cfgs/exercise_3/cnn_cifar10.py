@@ -102,12 +102,41 @@ q2c_earlystop_experiment.update(dict(
 q2c_earlystop_experiment['trainer_config']['save_period'] = 100
 q2c_earlystop_experiment['trainer_config']['early_stop'] = 4
 
-q3a_aug1_experiment = ()
-# q3a_aug2_experiment = ()
-# q3a_aug3_experiment = ()
-# ...
+# Augmentation 1: Spatial/Geometric Shifts
+q3a_aug1_experiment = deepcopy(q2a_normalization_experiment)
+q3a_aug1_experiment.update(dict(
+    name='CIFAR10_CNN_Aug1_Geometric',
+))
+q3a_aug1_experiment['data_args']['transform_preset'] = 'CIFAR10_WithFlip'
+q3a_aug1_experiment['model_args']['drop_prob'] = 0.0
+q3a_aug1_experiment['trainer_config']['epochs'] = 30
+
+# Augmentation 2: Color Space Distortions
+q3a_aug2_experiment = deepcopy(q2a_normalization_experiment)
+q3a_aug2_experiment.update(dict(
+    name='CIFAR10_CNN_Aug2_Color',
+))
+q3a_aug2_experiment['data_args']['transform_preset'] = 'CIFAR10_ColorJitter'
+q3a_aug2_experiment['model_args']['drop_prob'] = 0.0
+q3a_aug2_experiment['trainer_config']['epochs'] = 30
+
+# Augmentation 3: Heavy Combined Pipeline
+q3a_aug3_experiment = deepcopy(q2a_normalization_experiment)
+q3a_aug3_experiment.update(dict(
+    name='CIFAR10_CNN_Aug3_Heavy',
+))
+q3a_aug3_experiment['data_args']['transform_preset'] = 'CIFAR10_HeavyAug'
+q3a_aug3_experiment['model_args']['drop_prob'] = 0.0
+q3a_aug3_experiment['trainer_config']['epochs'] = 30
 
 
-q3b_dropout_experiment = ()
+# Dropout Sweep Experiment (Vanilla Data Distribution Only)
+q3b_dropout_experiment = deepcopy(q2a_normalization_experiment)
+q3b_dropout_experiment.update(dict(
+    name='CIFAR10_CNN_Dropout_Sweep',
+))
+q3b_dropout_experiment['data_args']['transform_preset'] = 'CIFAR10'
+q3b_dropout_experiment['model_args']['drop_prob'] = 0.3
+q3b_dropout_experiment['trainer_config']['epochs'] = 30
 
 # define more config dictionaries if needed...
