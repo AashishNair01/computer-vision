@@ -82,6 +82,7 @@ q2a_normalization_experiment.update(dict(
 # Swapped nn.Identity with nn.BatchNorm2d and increased epochs to 50
 q2a_normalization_experiment['model_args']['norm_layer'] = nn.BatchNorm2d
 q2a_normalization_experiment['trainer_config']['epochs'] = 50
+q2a_normalization_experiment['trainer_config']['save_period'] = 100
 q2a_normalization_experiment['trainer_config']['monitor'] = "max eval_top1"
 
 # Instead of modifying Q1 directly, we create an extended version of it 
@@ -91,12 +92,14 @@ q2b_baseline_extended_experiment.update(dict(
     name='CIFAR10_CNN_Extended', # This saves checkpoints to a new folder
 ))
 q2b_baseline_extended_experiment['trainer_config']['epochs'] = 50
+q2b_baseline_extended_experiment['trainer_config']['save_period'] = 100
 q2b_baseline_extended_experiment['trainer_config']['monitor'] = "max eval_top1"
 
 q2c_earlystop_experiment = deepcopy(q2a_normalization_experiment)
 q2c_earlystop_experiment.update(dict(
     name='CIFAR10_CNN_EarlyStop',
 ))
+q2c_earlystop_experiment['trainer_config']['save_period'] = 100
 q2c_earlystop_experiment['trainer_config']['early_stop'] = 4
 
 q3a_aug1_experiment = ()
