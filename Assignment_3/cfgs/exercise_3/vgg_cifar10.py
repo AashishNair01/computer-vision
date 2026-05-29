@@ -15,7 +15,7 @@ q4_dict = dict(
     model_args = dict(
         num_classes = 10,
 
-        fine_tune=True,
+        fine_tune=False,
         weights="IMAGENET1K_V1",
 
         # The following configs are not for the backbone (that's always a VGG). Rather,
