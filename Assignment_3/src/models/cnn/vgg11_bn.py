@@ -15,7 +15,12 @@ class VGG11_bn(BaseModel):
         # Note that this config is for the MLP head (and not the VGG backbone) #
         ########################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
+        self.layer_config = layer_config
+        self.num_classes = num_classes
+        self.activation = activation
+        self.norm_layer = norm_layer
+        self.fine_tune = fine_tune
+        self.weights = weights
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         self._build_model()
 
@@ -31,7 +36,33 @@ class VGG11_bn(BaseModel):
         # the fine_tune flag.                                                           #
         #################################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-        pass
+        
+        #load the pretrained VGG11_bn model
+        vgg = vgg11_bn(weights=self.weights)
+        self.features = vgg.features
+
+        #freeze the feature extraction layers if fine_tune is False
+        if not self.fine_tune:
+            for param in self.features.parameters():
+                param.requires_grad = False
+
+        #Adaptive pooling
+        self.avgpool = vgg.avgpool
+
+        #Custom classifier layers
+        classifier_layers = []
+        input_dim = 512 * 7 * 7 
+        prev_dim = input_dim
+
+        for hidden_dim in self.layer_config:
+            classifier_layers.append(nn.Linear(prev_dim, hidden_dim))
+            classifier_layers.append(self.norm_layer(hidden_dim))
+            classifier_layers.append(self.activation())
+            prev_dim = hidden_dim
+
+        #final output layer
+        classifier_layers.append(nn.Linear(prev_dim, self.num_classes))
+        self.classifier = nn.Sequential(*classifier_layers)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -41,7 +72,10 @@ class VGG11_bn(BaseModel):
         # Do not apply any softmax on the output                                        #
         #################################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-        out = None
+        x = self.features(x)
+        x = self.avgpool(x)
+        x = torch.flatten(x, 1)
+        out = self.classifier(x)
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         return out
     
